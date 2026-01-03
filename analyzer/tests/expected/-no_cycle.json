@@ -1,0 +1,131 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_t t2;\n",
+                    "pthread_t t3;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "thread1_func",
+                "id": "thread1_func_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&mutexC)",
+                    "pthread_mutex_unlock(&mutexC)",
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "thread2_func",
+                "id": "thread2_func_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "thread3_func",
+                "id": "thread3_func_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "thread1_func",
+            "function": "thread1_func",
+            "line": 9,
+            "order": 1,
+            "source": "mutexA",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread1_func",
+            "function": "thread1_func",
+            "line": 13,
+            "order": 2,
+            "source": "mutexB",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2_func",
+            "function": "thread2_func",
+            "line": 21,
+            "order": 1,
+            "source": "mutexB",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2_func",
+            "function": "thread2_func",
+            "line": 25,
+            "order": 2,
+            "source": "mutexC",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread3_func",
+            "function": "thread3_func",
+            "line": 33,
+            "order": 1,
+            "source": "mutexA",
+            "target": "t3",
+            "type": "holds"
+        }
+    ],
+    "filename": "-no_cycle.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "mutexC",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        },
+        {
+            "id": "t2",
+            "type": "process"
+        },
+        {
+            "id": "t3",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA, mutexB, mutexC;\n\nvoid *thread1_func(void *arg) {\n    pthread_mutex_lock(&mutexA);\n\n    sleep(1);\n\n    pthread_mutex_lock(&mutexB);\n\n    pthread_mutex_unlock(&mutexB);\n    pthread_mutex_unlock(&mutexA);\n    return NULL;\n}\n\nvoid *thread2_func(void *arg) {\n    pthread_mutex_lock(&mutexB);\n\n    sleep(1);\n\n    pthread_mutex_lock(&mutexC);\n\n    pthread_mutex_unlock(&mutexC);\n    pthread_mutex_unlock(&mutexB);\n    return NULL;\n}\n\nvoid *thread3_func(void *arg) {\n    pthread_mutex_lock(&mutexA);\n\n    sleep(1);\n\n    pthread_mutex_unlock(&mutexA);\n    return NULL;\n}\n\nint main() {\n    pthread_t t1, t2, t3;\n\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n    pthread_mutex_init(&mutexC, NULL);\n\n    pthread_create(&t1, NULL, thread1_func, NULL);\n    pthread_create(&t2, NULL, thread2_func, NULL);\n    pthread_create(&t3, NULL, thread3_func, NULL);\n\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n    pthread_join(t3, NULL);\n\n    return 0;\n}\n"
+}

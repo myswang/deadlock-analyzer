@@ -1,0 +1,119 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "struct Register todaysRegister = {3579.5100000000002};\n",
+                    "struct Customer bob = {300, 44.289999999999999};\n",
+                    "struct TransferArgs thread1Args = {&todaysRegister, &bob, 22.559999999999999};\n",
+                    "struct TransferArgs thread2Args = {&todaysRegister, &bob, 11.93};\n",
+                    "pthread_t thread1;\n",
+                    "pthread_t thread2;\n",
+                    "printf(\"%f\\n\", todaysRegister.currentBalance)",
+                    "printf(\"%f\\n\", bob.storeBalance)",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&resource1)",
+                    "printf(\"Payment processing..\\n\")",
+                    "TransferArgs *targs = (TransferArgs *)vargp;\n",
+                    "targs->currentCustomer->storeBalance -= targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&resource2)",
+                    "targs->registerUsed->currentBalance += targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&resource2)",
+                    "pthread_mutex_unlock(&resource1)"
+                ],
+                "function": "payment",
+                "id": "payment_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&resource2)",
+                    "printf(\"Refund processing..\\n\")",
+                    "TransferArgs *targs = (TransferArgs *)vargp;\n",
+                    "targs->currentCustomer->storeBalance += targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&resource1)",
+                    "targs->registerUsed->currentBalance -= targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&resource1)",
+                    "pthread_mutex_unlock(&resource2)"
+                ],
+                "function": "refund",
+                "id": "refund_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "payment",
+            "function": "payment",
+            "line": 24,
+            "order": 1,
+            "source": "resource1",
+            "target": "thread1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "payment",
+            "function": "payment",
+            "line": 32,
+            "order": 2,
+            "source": "resource2",
+            "target": "thread1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "refund",
+            "function": "refund",
+            "line": 45,
+            "order": 1,
+            "source": "resource2",
+            "target": "thread2",
+            "type": "holds"
+        },
+        {
+            "entryPt": "refund",
+            "function": "refund",
+            "line": 53,
+            "order": 2,
+            "source": "resource1",
+            "target": "thread2",
+            "type": "holds"
+        }
+    ],
+    "filename": "-user_study_example_1.c",
+    "nodes": [
+        {
+            "id": "resource1",
+            "type": "resource"
+        },
+        {
+            "id": "resource2",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "thread1",
+            "type": "process"
+        },
+        {
+            "id": "thread2",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct Register {\n    double currentBalance;\n} Register;\n\ntypedef struct Customer {\n    int rewardPoints;\n    double storeBalance;\n} Customer;\n\ntypedef struct TransferArgs {\n    Register *registerUsed;\n    Customer *currentCustomer;\n    double transferAmount;\n} TransferArgs;\n\npthread_mutex_t resource1, resource2;\n\nvoid *payment(void *vargp) {\n    pthread_mutex_lock(&resource1);\n\n    printf(\"Payment processing..\\n\");\n    TransferArgs *targs = (TransferArgs *)vargp;\n    targs->currentCustomer->storeBalance -= targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_lock(&resource2);\n\n    targs->registerUsed->currentBalance += targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_unlock(&resource2);\n\n    pthread_mutex_unlock(&resource1);\n    pthread_exit(NULL);\n}\n\nvoid *refund(void *vargp) {\n    pthread_mutex_lock(&resource2);\n\n    printf(\"Refund processing..\\n\");\n    TransferArgs *targs = (TransferArgs *)vargp;\n    targs->currentCustomer->storeBalance += targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_lock(&resource1);\n\n    targs->registerUsed->currentBalance -= targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_unlock(&resource1);\n\n    pthread_mutex_unlock(&resource2);\n    pthread_exit(NULL);\n}\n\nint main() {\n    struct Register todaysRegister = {3579.51};\n    struct Customer bob = {300, 44.29};\n\n    struct TransferArgs thread1Args = {&todaysRegister, &bob, 22.56};\n    struct TransferArgs thread2Args = {&todaysRegister, &bob, 11.93};\n\n    pthread_mutex_init(&resource1, NULL);\n    pthread_t thread1;\n    pthread_create(&thread1, NULL, payment, &thread1Args);\n    pthread_join(thread1, NULL);\n\n    pthread_mutex_init(&resource2, NULL);\n    pthread_t thread2;\n    pthread_create(&thread2, NULL, refund, &thread2Args);\n    pthread_join(thread2, NULL);\n\n    printf(\"%f\\n\", todaysRegister.currentBalance);\n    printf(\"%f\\n\", bob.storeBalance);\n\n    return 0;\n}\n"
+}

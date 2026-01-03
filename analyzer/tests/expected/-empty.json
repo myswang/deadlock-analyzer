@@ -1,0 +1,24 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [],
+    "filename": "-empty.c",
+    "nodes": [
+        {
+            "id": "main",
+            "type": "process"
+        }
+    ],
+    "source": "int main() {\n    return 0;\n}"
+}

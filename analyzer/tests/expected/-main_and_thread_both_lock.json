@@ -1,0 +1,69 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_mutex_lock(&mutexA)",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&mutexA)",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "worker",
+                "id": "worker_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "main",
+            "function": "main",
+            "line": 22,
+            "order": 1,
+            "source": "mutexA",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "worker",
+            "function": "worker",
+            "line": 9,
+            "order": 1,
+            "source": "mutexB",
+            "target": "t1",
+            "type": "holds"
+        }
+    ],
+    "filename": "-main_and_thread_both_lock.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA;\npthread_mutex_t mutexB;\n\nvoid *worker(void *arg) {\n    pthread_mutex_lock(&mutexB);\n    sleep(1);\n    pthread_mutex_unlock(&mutexB);\n    return NULL;\n}\n\nint main() {\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n\n    pthread_t t1;\n    pthread_create(&t1, NULL, worker, NULL);\n\n    pthread_mutex_lock(&mutexA);\n    sleep(1);\n    pthread_mutex_unlock(&mutexA);\n\n    pthread_join(t1, NULL);\n    return 0;\n}"
+}

@@ -1,0 +1,138 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "thread1_B1",
+                "target": "lockA_then_B_B1",
+                "type": "call"
+            },
+            {
+                "source": "thread2_B1",
+                "target": "lockB_then_A_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "lockA_then_B",
+                "id": "lockA_then_B_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "lockB_then_A",
+                "id": "lockB_then_A_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_t t2;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "lockA_then_B()"
+                ],
+                "function": "thread1",
+                "id": "thread1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "lockB_then_A()"
+                ],
+                "function": "thread2",
+                "id": "thread2_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "cycles": [
+        "mutexA -> mutexB -> mutexA"
+    ],
+    "deadlocks": true,
+    "edges": [
+        {
+            "cycle": 1,
+            "entryPt": "thread1",
+            "function": "lockA_then_B",
+            "line": 9,
+            "order": 1,
+            "source": "mutexA",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread1",
+            "function": "lockA_then_B",
+            "line": 11,
+            "order": 2,
+            "source": "t1",
+            "target": "mutexB",
+            "type": "waiting"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread2",
+            "function": "lockB_then_A",
+            "line": 17,
+            "order": 1,
+            "source": "mutexB",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread2",
+            "function": "lockB_then_A",
+            "line": 19,
+            "order": 2,
+            "source": "t2",
+            "target": "mutexA",
+            "type": "waiting"
+        }
+    ],
+    "filename": "+nested.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        },
+        {
+            "id": "t2",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA, mutexB;\n\nvoid lockA_then_B() {\n    pthread_mutex_lock(&mutexA);\n    sleep(1);\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_unlock(&mutexB);\n    pthread_mutex_unlock(&mutexA);\n}\n\nvoid lockB_then_A() {\n    pthread_mutex_lock(&mutexB);\n    sleep(1);\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_unlock(&mutexA);\n    pthread_mutex_unlock(&mutexB);\n}\n\nvoid *thread1(void *arg) {\n    lockA_then_B();\n    return NULL;\n}\n\nvoid *thread2(void *arg) {\n    lockB_then_A();\n    return NULL;\n}\n\nint main() {\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n\n    pthread_t t1, t2;\n    pthread_create(&t1, NULL, thread1, NULL);\n    pthread_create(&t2, NULL, thread2, NULL);\n\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n\n    return 0;\n}"
+}

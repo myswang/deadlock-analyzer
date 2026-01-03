@@ -1,0 +1,253 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "loop_lock_B1",
+                "target": "loop_lock_B3",
+                "type": "normal"
+            },
+            {
+                "source": "loop_lock_B2",
+                "target": "loop_lock_B1",
+                "type": "normal"
+            },
+            {
+                "source": "loop_lock_B3",
+                "target": "loop_lock_B2",
+                "type": "true"
+            },
+            {
+                "source": "loop_lock_B4",
+                "target": "loop_lock_B3",
+                "type": "normal"
+            },
+            {
+                "source": "maybe_lock_B3",
+                "target": "maybe_lock_B2",
+                "type": "true"
+            },
+            {
+                "source": "maybe_lock_B3",
+                "target": "maybe_lock_B1",
+                "type": "false"
+            },
+            {
+                "source": "maybe_lock_B4",
+                "target": "maybe_lock_B3",
+                "type": "normal"
+            },
+            {
+                "source": "maybe_lock_B5",
+                "target": "maybe_lock_B3",
+                "type": "normal"
+            },
+            {
+                "source": "maybe_lock_B6",
+                "target": "maybe_lock_B5",
+                "type": "true"
+            },
+            {
+                "source": "maybe_lock_B6",
+                "target": "maybe_lock_B4",
+                "type": "false"
+            },
+            {
+                "source": "thread1_B1",
+                "target": "maybe_lock_B1",
+                "type": "call"
+            },
+            {
+                "source": "thread2_B1",
+                "target": "maybe_lock_B1",
+                "type": "call"
+            },
+            {
+                "source": "thread2_B1",
+                "target": "loop_lock_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "++i"
+                ],
+                "function": "loop_lock",
+                "id": "loop_lock_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "loop_lock",
+                "id": "loop_lock_B2",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "i < 3"
+                ],
+                "function": "loop_lock",
+                "id": "loop_lock_B3",
+                "type": "loop"
+            },
+            {
+                "code": [
+                    "int i = 0;\n"
+                ],
+                "function": "loop_lock",
+                "id": "loop_lock_B4",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_t t2;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "maybe_lock",
+                "id": "maybe_lock_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "maybe_lock",
+                "id": "maybe_lock_B2",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "condition"
+                ],
+                "function": "maybe_lock",
+                "id": "maybe_lock_B3",
+                "type": "branch"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)"
+                ],
+                "function": "maybe_lock",
+                "id": "maybe_lock_B4",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)"
+                ],
+                "function": "maybe_lock",
+                "id": "maybe_lock_B5",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "condition"
+                ],
+                "function": "maybe_lock",
+                "id": "maybe_lock_B6",
+                "type": "branch"
+            },
+            {
+                "code": [
+                    "maybe_lock(1)"
+                ],
+                "function": "thread1",
+                "id": "thread1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "maybe_lock(0)",
+                    "loop_lock()"
+                ],
+                "function": "thread2",
+                "id": "thread2_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "thread1",
+            "function": "maybe_lock",
+            "line": 10,
+            "order": 1,
+            "source": "mutexA",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread1",
+            "function": "maybe_lock",
+            "line": 12,
+            "order": 2,
+            "source": "mutexB",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2",
+            "function": "maybe_lock",
+            "line": 10,
+            "order": 1,
+            "source": "mutexA",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2",
+            "function": "maybe_lock",
+            "line": 12,
+            "order": 2,
+            "source": "mutexB",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2",
+            "function": "loop_lock",
+            "line": 24,
+            "order": 3,
+            "source": "mutexA",
+            "target": "t2",
+            "type": "holds"
+        }
+    ],
+    "filename": "-control_flow.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        },
+        {
+            "id": "t2",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA, mutexB;\n\nvoid maybe_lock(int condition) {\n    if (condition) {\n        pthread_mutex_lock(&mutexA);\n    } else {\n        pthread_mutex_lock(&mutexB);\n    }\n\n    if (condition) {\n        pthread_mutex_unlock(&mutexA);\n    } else {\n        pthread_mutex_unlock(&mutexB);\n    }\n}\n\nvoid loop_lock() {\n    for (int i = 0; i < 3; ++i) {\n        pthread_mutex_lock(&mutexA);\n        pthread_mutex_unlock(&mutexA);\n    }\n}\n\nvoid *thread1(void *arg) {\n    maybe_lock(1);\n    return NULL;\n}\n\nvoid *thread2(void *arg) {\n    maybe_lock(0);\n    loop_lock();\n    return NULL;\n}\n\nint main() {\n    pthread_t t1, t2;\n\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n\n    pthread_create(&t1, NULL, thread1, NULL);\n    pthread_create(&t2, NULL, thread2, NULL);\n\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n\n    return 0;\n}"
+}

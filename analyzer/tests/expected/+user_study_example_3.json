@@ -1,0 +1,174 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_mutex_lock(&resource3)",
+                    "printf(\"Point conversion processing..\\n\")",
+                    "TransferArgs *targs = (TransferArgs *)vargp;\n",
+                    "targs->currentCustomer->storeBalance -= targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&resource1)",
+                    "targs->currentCustomer->rewardPoints += targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&resource1)",
+                    "pthread_mutex_unlock(&resource3)"
+                ],
+                "function": "convertPoints",
+                "id": "convertPoints_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "struct Register todaysRegister = {3579.5100000000002};\n",
+                    "struct Customer bob = {300., 44.289999999999999};\n",
+                    "struct TransferArgs thread1Args = {&todaysRegister, &bob, 22.559999999999999};\n",
+                    "struct TransferArgs thread2Args = {&todaysRegister, &bob, 11.93};\n",
+                    "struct TransferArgs thread3Args = {&todaysRegister, &bob, 5.0999999999999996};\n",
+                    "pthread_t thread1;\n",
+                    "pthread_t thread2;\n",
+                    "pthread_t thread3;\n",
+                    "printf(\"%f\\n\", todaysRegister.currentBalance)",
+                    "printf(\"%f\\n\", bob.storeBalance)",
+                    "printf(\"%f\\n\", bob.rewardPoints)",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&resource1)",
+                    "printf(\"Payment processing..\\n\")",
+                    "TransferArgs *targs = (TransferArgs *)vargp;\n",
+                    "targs->currentCustomer->storeBalance -= targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&resource2)",
+                    "targs->registerUsed->currentBalance += targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&resource2)",
+                    "pthread_mutex_unlock(&resource1)"
+                ],
+                "function": "payment",
+                "id": "payment_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&resource2)",
+                    "printf(\"Point redemption processing..\\n\")",
+                    "TransferArgs *targs = (TransferArgs *)vargp;\n",
+                    "targs->registerUsed->currentBalance -= targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&resource3)",
+                    "targs->currentCustomer->rewardPoints -= targs->transferAmount",
+                    "sleep(1)",
+                    "pthread_mutex_unlock(&resource3)",
+                    "pthread_mutex_unlock(&resource2)"
+                ],
+                "function": "redeemPoints",
+                "id": "redeemPoints_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "cycles": [
+        "resource1 -> resource2 -> resource3 -> resource1"
+    ],
+    "deadlocks": true,
+    "edges": [
+        {
+            "cycle": 1,
+            "entryPt": "payment",
+            "function": "payment",
+            "line": 24,
+            "order": 1,
+            "source": "resource1",
+            "target": "thread1",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "payment",
+            "function": "payment",
+            "line": 32,
+            "order": 2,
+            "source": "thread1",
+            "target": "resource2",
+            "type": "waiting"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "redeemPoints",
+            "function": "redeemPoints",
+            "line": 45,
+            "order": 1,
+            "source": "resource2",
+            "target": "thread2",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "redeemPoints",
+            "function": "redeemPoints",
+            "line": 53,
+            "order": 2,
+            "source": "thread2",
+            "target": "resource3",
+            "type": "waiting"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "convertPoints",
+            "function": "convertPoints",
+            "line": 66,
+            "order": 1,
+            "source": "resource3",
+            "target": "thread3",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "convertPoints",
+            "function": "convertPoints",
+            "line": 74,
+            "order": 2,
+            "source": "thread3",
+            "target": "resource1",
+            "type": "waiting"
+        }
+    ],
+    "filename": "+user_study_example_3.c",
+    "nodes": [
+        {
+            "id": "resource1",
+            "type": "resource"
+        },
+        {
+            "id": "resource2",
+            "type": "resource"
+        },
+        {
+            "id": "resource3",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "thread1",
+            "type": "process"
+        },
+        {
+            "id": "thread2",
+            "type": "process"
+        },
+        {
+            "id": "thread3",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct Register {\n    double currentBalance;\n} Register;\n\ntypedef struct Customer {\n    double rewardPoints;\n    double storeBalance;\n} Customer;\n\ntypedef struct TransferArgs {\n    Register *registerUsed;\n    Customer *currentCustomer;\n    double transferAmount;\n} TransferArgs;\n\npthread_mutex_t resource1, resource2, resource3;\n\nvoid *payment(void *vargp) {\n    pthread_mutex_lock(&resource1);\n\n    printf(\"Payment processing..\\n\");\n    TransferArgs *targs = (TransferArgs *)vargp;\n    targs->currentCustomer->storeBalance -= targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_lock(&resource2);\n\n    targs->registerUsed->currentBalance += targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_unlock(&resource2);\n\n    pthread_mutex_unlock(&resource1);\n    pthread_exit(NULL);\n}\n\nvoid *redeemPoints(void *vargp) {\n    pthread_mutex_lock(&resource2);\n\n    printf(\"Point redemption processing..\\n\");\n    TransferArgs *targs = (TransferArgs *)vargp;\n    targs->registerUsed->currentBalance -= targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_lock(&resource3);\n\n    targs->currentCustomer->rewardPoints -= targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_unlock(&resource3);\n\n    pthread_mutex_unlock(&resource2);\n    pthread_exit(NULL);\n}\n\nvoid *convertPoints(void *vargp) {\n    pthread_mutex_lock(&resource3);\n\n    printf(\"Point conversion processing..\\n\");\n    TransferArgs *targs = (TransferArgs *)vargp;\n    targs->currentCustomer->storeBalance -= targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_lock(&resource1);\n\n    targs->currentCustomer->rewardPoints += targs->transferAmount;\n    // assume that now we are doing some sort of API call to a database\n    sleep(1);\n\n    pthread_mutex_unlock(&resource1);\n\n    pthread_mutex_unlock(&resource3);\n    pthread_exit(NULL);\n}\n\nint main() {\n    struct Register todaysRegister = {3579.51};\n    struct Customer bob = {300.0, 44.29};\n\n    struct TransferArgs thread1Args = {&todaysRegister, &bob, 22.56};\n    struct TransferArgs thread2Args = {&todaysRegister, &bob, 11.93};\n    struct TransferArgs thread3Args = {&todaysRegister, &bob, 5.1};\n\n    pthread_mutex_init(&resource1, NULL);\n    pthread_mutex_init(&resource2, NULL);\n    pthread_mutex_init(&resource3, NULL);\n\n    pthread_t thread1;\n    pthread_t thread2;\n    pthread_t thread3;\n\n    pthread_create(&thread1, NULL, payment, &thread1Args);\n    pthread_create(&thread2, NULL, redeemPoints, &thread2Args);\n    pthread_create(&thread3, NULL, convertPoints, &thread3Args);\n\n    pthread_join(thread1, NULL);\n    pthread_join(thread2, NULL);\n    pthread_join(thread3, NULL);\n\n    printf(\"%f\\n\", todaysRegister.currentBalance);\n    printf(\"%f\\n\", bob.storeBalance);\n    printf(\"%f\\n\", bob.rewardPoints);\n\n    return 0;\n}\n"
+}

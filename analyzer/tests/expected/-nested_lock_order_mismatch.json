@@ -1,0 +1,146 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "lock_m1_then_m3_B1",
+                "target": "lock_m3_B1",
+                "type": "call"
+            },
+            {
+                "source": "thread1_B1",
+                "target": "lock_m1_then_m3_B1",
+                "type": "call"
+            },
+            {
+                "source": "thread2_B1",
+                "target": "lock_m2_then_m1_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "pthread_mutex_lock(&m1)",
+                    "lock_m3()",
+                    "pthread_mutex_unlock(&m3)",
+                    "pthread_mutex_unlock(&m1)"
+                ],
+                "function": "lock_m1_then_m3",
+                "id": "lock_m1_then_m3_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&m2)",
+                    "pthread_mutex_lock(&m1)",
+                    "pthread_mutex_unlock(&m1)",
+                    "pthread_mutex_unlock(&m2)"
+                ],
+                "function": "lock_m2_then_m1",
+                "id": "lock_m2_then_m1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&m3)"
+                ],
+                "function": "lock_m3",
+                "id": "lock_m3_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_t t2;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "lock_m1_then_m3()"
+                ],
+                "function": "thread1",
+                "id": "thread1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "lock_m2_then_m1()"
+                ],
+                "function": "thread2",
+                "id": "thread2_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "thread1",
+            "function": "lock_m1_then_m3",
+            "line": 15,
+            "order": 1,
+            "source": "m1",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread1",
+            "function": "lock_m3",
+            "line": 11,
+            "order": 2,
+            "source": "m3",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2",
+            "function": "lock_m2_then_m1",
+            "line": 22,
+            "order": 1,
+            "source": "m2",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread2",
+            "function": "lock_m2_then_m1",
+            "line": 23,
+            "order": 2,
+            "source": "m1",
+            "target": "t2",
+            "type": "holds"
+        }
+    ],
+    "filename": "-nested_lock_order_mismatch.c",
+    "nodes": [
+        {
+            "id": "m1",
+            "type": "resource"
+        },
+        {
+            "id": "m2",
+            "type": "resource"
+        },
+        {
+            "id": "m3",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        },
+        {
+            "id": "t2",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t m1;\npthread_mutex_t m2;\npthread_mutex_t m3;\n\nvoid lock_m3() {\n    pthread_mutex_lock(&m3);\n}\n\nvoid lock_m1_then_m3() {\n    pthread_mutex_lock(&m1);\n    lock_m3();\n    pthread_mutex_unlock(&m3);\n    pthread_mutex_unlock(&m1);\n}\n\nvoid lock_m2_then_m1() {\n    pthread_mutex_lock(&m2);\n    pthread_mutex_lock(&m1);\n    pthread_mutex_unlock(&m1);\n    pthread_mutex_unlock(&m2);\n}\n\nvoid *thread1(void *arg) {\n    lock_m1_then_m3();\n    return NULL;\n}\n\nvoid *thread2(void *arg) {\n    lock_m2_then_m1();\n    return NULL;\n}\n\nint main() {\n    pthread_t t1, t2;\n\n    pthread_create(&t1, NULL, thread1, NULL);\n    pthread_create(&t2, NULL, thread2, NULL);\n\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n\n    return 0;\n}"
+}

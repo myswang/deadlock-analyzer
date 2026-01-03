@@ -1,0 +1,233 @@
+{
+  "CFG": {
+      "edges": [
+          {
+              "from": "func1_B3",
+              "to": "func1_B2",
+              "type": "true"
+          },
+          {
+              "from": "func1_B3",
+              "to": "func1_B1",
+              "type": "false"
+          },
+          {
+              "from": "func2_B2",
+              "to": "func2_B1",
+              "type": "true"
+          },
+          {
+              "from": "func3_B1",
+              "to": "func3_B3",
+              "type": "normal"
+          },
+          {
+              "from": "func3_B2",
+              "to": "func3_B1",
+              "type": "normal"
+          },
+          {
+              "from": "func3_B3",
+              "to": "func3_B2",
+              "type": "true"
+          },
+          {
+              "from": "func3_B4",
+              "to": "func3_B3",
+              "type": "normal"
+          },
+          {
+              "from": "thread1_B1",
+              "to": "func1_B1",
+              "type": "call"
+          },
+          {
+              "from": "thread2_B1",
+              "to": "func2_B1",
+              "type": "call"
+          },
+          {
+              "from": "thread2_B1",
+              "to": "func3_B1",
+              "type": "call"
+          }
+      ],
+      "nodes": [
+          {
+              "code": [
+                  "sleep(1)"
+              ],
+              "function": "func1",
+              "id": "func1_B1",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "pthread_mutex_lock(&mutexA)",
+                  "pthread_mutex_lock(&mutexB)",
+                  "pthread_mutex_unlock(&mutexB)",
+                  "pthread_mutex_unlock(&mutexA)"
+              ],
+              "function": "func1",
+              "id": "func1_B2",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "condition"
+              ],
+              "function": "func1",
+              "id": "func1_B3",
+              "type": "branch"
+          },
+          {
+              "code": [
+                  "pthread_mutex_lock(&mutexB)",
+                  "pthread_mutex_lock(&mutexA)",
+                  "pthread_mutex_unlock(&mutexA)",
+                  "pthread_mutex_unlock(&mutexB)"
+              ],
+              "function": "func2",
+              "id": "func2_B1",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "condition"
+              ],
+              "function": "func2",
+              "id": "func2_B2",
+              "type": "branch"
+          },
+          {
+              "code": [
+                  "++i"
+              ],
+              "function": "func3",
+              "id": "func3_B1",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "printf(\"hello\\n\")"
+              ],
+              "function": "func3",
+              "id": "func3_B2",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "i < 3"
+              ],
+              "function": "func3",
+              "id": "func3_B3",
+              "type": "loop"
+          },
+          {
+              "code": [
+                  "int i = 0;\n"
+              ],
+              "function": "func3",
+              "id": "func3_B4",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "pthread_t t1;\n",
+                  "pthread_t t2;\n",
+                  "return 0;\n"
+              ],
+              "function": "main",
+              "id": "main_B1",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "func1(1)"
+              ],
+              "function": "thread1",
+              "id": "thread1_B1",
+              "type": "normal"
+          },
+          {
+              "code": [
+                  "func2(0)",
+                  "func3()"
+              ],
+              "function": "thread2",
+              "id": "thread2_B1",
+              "type": "normal"
+          }
+      ]
+  },
+  "cycles": [
+      "mutexA -> mutexB -> mutexA"
+  ],
+  "deadlocks": true,
+  "edges": [
+      {
+          "cycle": 1,
+          "entryPt": "thread1",
+          "source": "mutexA",
+          "function": "func1",
+          "line": 10,
+          "order": 1,
+          "target": "t1",
+          "type": "holds"
+      },
+      {
+          "cycle": 1,
+          "entryPt": "thread1",
+          "source": "t1",
+          "function": "func1",
+          "line": 11,
+          "order": 2,
+          "target": "mutexB",
+          "type": "waiting"
+      },
+      {
+          "cycle": 1,
+          "entryPt": "thread2",
+          "source": "mutexB",
+          "function": "func2",
+          "line": 21,
+          "order": 1,
+          "target": "t2",
+          "type": "holds"
+      },
+      {
+          "cycle": 1,
+          "entryPt": "thread2",
+          "source": "t2",
+          "function": "func2",
+          "line": 22,
+          "order": 2,
+          "target": "mutexA",
+          "type": "waiting"
+      }
+  ],
+  "filename": "+control_flow.c",
+  "nodes": [
+      {
+          "id": "mutexA",
+          "type": "resource"
+      },
+      {
+          "id": "mutexB",
+          "type": "resource"
+      },
+      {
+          "id": "main",
+          "type": "process"
+      },
+      {
+          "id": "t1",
+          "type": "process"
+      },
+      {
+          "id": "t2",
+          "type": "process"
+      }
+  ],
+  "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA, mutexB;\n\nvoid func1(int condition) {\n    if (condition) {\n        pthread_mutex_lock(&mutexA);\n        pthread_mutex_lock(&mutexB);\n        pthread_mutex_unlock(&mutexB);\n        pthread_mutex_unlock(&mutexA);\n    } else {\n        sleep(1);\n    }\n}\n\nvoid func2(int condition) {\n    if (condition) {\n        pthread_mutex_lock(&mutexB);\n        pthread_mutex_lock(&mutexA);\n        pthread_mutex_unlock(&mutexA);\n        pthread_mutex_unlock(&mutexB);\n    }\n}\n\nvoid func3() {\n    for (int i = 0; i < 3; ++i) {\n        printf(\"hello\\n\");\n    }\n}\n\nvoid *thread1(void *arg) {\n    func1(1);\n    return NULL;\n}\n\nvoid *thread2(void *arg) {\n    func2(0);\n    func3();\n    return NULL;\n}\n\nint main() {\n    pthread_t t1, t2;\n\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n\n    pthread_create(&t1, NULL, thread1, NULL);\n    pthread_create(&t2, NULL, thread2, NULL);\n\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n\n    return 0;\n}"
+}

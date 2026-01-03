@@ -1,0 +1,89 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t t;\n",
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexA)",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "thread_fn",
+                "id": "thread_fn_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "main",
+            "function": "main",
+            "line": 21,
+            "order": 1,
+            "source": "mutexA",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "main",
+            "line": 22,
+            "order": 2,
+            "source": "mutexB",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread_fn",
+            "function": "thread_fn",
+            "line": 8,
+            "order": 1,
+            "source": "mutexB",
+            "target": "t",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread_fn",
+            "function": "thread_fn",
+            "line": 9,
+            "order": 2,
+            "source": "mutexA",
+            "target": "t",
+            "type": "holds"
+        }
+    ],
+    "filename": "-main_and_thread_both_lock_sequential.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA, mutexB;\n\nvoid *thread_fn(void *arg) {\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_unlock(&mutexA);\n    pthread_mutex_unlock(&mutexB);\n    return NULL;\n}\n\nint main() {\n    pthread_t t;\n\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_unlock(&mutexB);\n    pthread_mutex_unlock(&mutexA);\n\n    pthread_create(&t, NULL, thread_fn, NULL);\n    pthread_join(t, NULL);\n\n    return 0;\n}"
+}

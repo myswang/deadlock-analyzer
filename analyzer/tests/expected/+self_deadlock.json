@@ -1,0 +1,67 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "bad_func",
+                "id": "bad_func_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "cycles": [
+        "mutexA -> mutexA"
+    ],
+    "deadlocks": true,
+    "edges": [
+        {
+            "cycle": 1,
+            "entryPt": "bad_func",
+            "function": "bad_func",
+            "line": 9,
+            "order": 1,
+            "source": "mutexA",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "bad_func",
+            "function": "bad_func",
+            "line": 10,
+            "order": 2,
+            "source": "t1",
+            "target": "mutexA",
+            "type": "waiting"
+        }
+    ],
+    "filename": "+self_deadlock.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA;\n\nvoid *bad_func(void *arg) {\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_unlock(&mutexA);\n\n    return NULL;\n}\n\nint main() {\n    pthread_t t1;\n\n    pthread_create(&t1, NULL, bad_func, NULL);\n\n    pthread_join(t1, NULL);\n\n    return 0;\n}\n"
+}

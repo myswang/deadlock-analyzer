@@ -1,0 +1,112 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "main_B1",
+                "target": "sequentialFunction1_B1",
+                "type": "call"
+            },
+            {
+                "source": "main_B1",
+                "target": "sequentialFunction2_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t thread;\n",
+                    "sequentialFunction1()",
+                    "sequentialFunction2()",
+                    "pthread_mutex_destroy(&mutexA)",
+                    "pthread_mutex_destroy(&mutexB)",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "sequentialFunction1",
+                "id": "sequentialFunction1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexA)",
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "sequentialFunction2",
+                "id": "sequentialFunction2_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "main",
+            "function": "sequentialFunction1",
+            "line": 14,
+            "order": 1,
+            "source": "mutexA",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "sequentialFunction1",
+            "line": 15,
+            "order": 2,
+            "source": "mutexB",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "sequentialFunction2",
+            "line": 21,
+            "order": 3,
+            "source": "mutexB",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "sequentialFunction2",
+            "line": 22,
+            "order": 4,
+            "source": "mutexA",
+            "target": "main",
+            "type": "holds"
+        }
+    ],
+    "filename": "-single_thread_disguised.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "thread",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t mutexA;\npthread_mutex_t mutexB;\n\nvoid* thread_function(void* arg) {\n    return NULL;\n}\n\nvoid sequentialFunction1() {\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_unlock(&mutexB);\n    pthread_mutex_unlock(&mutexA);\n}\n\nvoid sequentialFunction2() {\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_unlock(&mutexA);\n    pthread_mutex_unlock(&mutexB);\n}\n\nint main() {\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n\n    pthread_t thread;\n    pthread_create(&thread, NULL, thread_function, NULL);\n\n    sequentialFunction1();\n    sequentialFunction2();\n\n    pthread_join(thread, NULL);\n\n    pthread_mutex_destroy(&mutexA);\n    pthread_mutex_destroy(&mutexB);\n\n    return 0;\n}\n"
+}

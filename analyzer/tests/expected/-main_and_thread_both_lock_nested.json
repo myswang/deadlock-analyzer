@@ -1,0 +1,121 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "main_B1",
+                "target": "main_inner_B1",
+                "type": "call"
+            },
+            {
+                "source": "thread_fn_B1",
+                "target": "thread_inner_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t t;\n",
+                    "main_inner()",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexA)",
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexB)",
+                    "pthread_mutex_unlock(&mutexA)"
+                ],
+                "function": "main_inner",
+                "id": "main_inner_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "thread_inner()"
+                ],
+                "function": "thread_fn",
+                "id": "thread_fn_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&mutexB)",
+                    "pthread_mutex_lock(&mutexC)",
+                    "pthread_mutex_unlock(&mutexC)",
+                    "pthread_mutex_unlock(&mutexB)"
+                ],
+                "function": "thread_inner",
+                "id": "thread_inner_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "main",
+            "function": "main_inner",
+            "line": 19,
+            "order": 1,
+            "source": "mutexA",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "main_inner",
+            "line": 20,
+            "order": 2,
+            "source": "mutexB",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread_fn",
+            "function": "thread_inner",
+            "line": 7,
+            "order": 1,
+            "source": "mutexB",
+            "target": "t",
+            "type": "holds"
+        },
+        {
+            "entryPt": "thread_fn",
+            "function": "thread_inner",
+            "line": 8,
+            "order": 2,
+            "source": "mutexC",
+            "target": "t",
+            "type": "holds"
+        }
+    ],
+    "filename": "-main_and_thread_both_lock_nested.c",
+    "nodes": [
+        {
+            "id": "mutexA",
+            "type": "resource"
+        },
+        {
+            "id": "mutexB",
+            "type": "resource"
+        },
+        {
+            "id": "mutexC",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n\npthread_mutex_t mutexA, mutexB, mutexC;\n\nvoid thread_inner() {\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_lock(&mutexC);\n    pthread_mutex_unlock(&mutexC);\n    pthread_mutex_unlock(&mutexB);\n}\n\nvoid* thread_fn(void* arg) {\n    thread_inner();\n    return NULL;\n}\n\nvoid main_inner() {\n    pthread_mutex_lock(&mutexA);\n    pthread_mutex_lock(&mutexB);\n    pthread_mutex_unlock(&mutexB);\n    pthread_mutex_unlock(&mutexA);\n}\n\nint main() {\n    pthread_t t;\n\n    pthread_mutex_init(&mutexA, NULL);\n    pthread_mutex_init(&mutexB, NULL);\n    pthread_mutex_init(&mutexC, NULL);\n\n    pthread_create(&t, NULL, thread_fn, NULL);\n\n    main_inner();\n\n    pthread_join(t, NULL);\n    return 0;\n}"
+}

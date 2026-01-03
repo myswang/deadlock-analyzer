@@ -1,0 +1,108 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_t t2;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&lockA)",
+                    "pthread_mutex_lock(&lockB)",
+                    "pthread_mutex_unlock(&lockB)",
+                    "pthread_mutex_unlock(&lockA)"
+                ],
+                "function": "thread_func1",
+                "id": "thread_func1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&lockB)",
+                    "pthread_mutex_lock(&lockA)",
+                    "pthread_mutex_unlock(&lockA)",
+                    "pthread_mutex_unlock(&lockB)"
+                ],
+                "function": "thread_func2",
+                "id": "thread_func2_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "cycles": [
+        "lockA -> lockB -> lockA"
+    ],
+    "deadlocks": true,
+    "edges": [
+        {
+            "cycle": 1,
+            "entryPt": "thread_func1",
+            "function": "thread_func1",
+            "line": 10,
+            "order": 1,
+            "source": "lockA",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread_func1",
+            "function": "thread_func1",
+            "line": 11,
+            "order": 2,
+            "source": "t1",
+            "target": "lockB",
+            "type": "waiting"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread_func2",
+            "function": "thread_func2",
+            "line": 18,
+            "order": 1,
+            "source": "lockB",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread_func2",
+            "function": "thread_func2",
+            "line": 19,
+            "order": 2,
+            "source": "t2",
+            "target": "lockA",
+            "type": "waiting"
+        }
+    ],
+    "filename": "+classic.c",
+    "nodes": [
+        {
+            "id": "lockA",
+            "type": "resource"
+        },
+        {
+            "id": "lockB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        },
+        {
+            "id": "t2",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t lockA;\npthread_mutex_t lockB;\n\nvoid* thread_func1(void*arg) {\n    pthread_mutex_lock(&lockA);\n    pthread_mutex_lock(&lockB);\n    pthread_mutex_unlock(&lockB);\n    pthread_mutex_unlock(&lockA);\n    return NULL;\n}\n\nvoid* thread_func2(void*arg) {\n    pthread_mutex_lock(&lockB);\n    pthread_mutex_lock(&lockA);\n    pthread_mutex_unlock(&lockA);\n    pthread_mutex_unlock(&lockB);\n    return NULL;\n}\n\nint main() {\n    pthread_t t1, t2;\n    pthread_create(&t1, NULL, thread_func1, NULL);\n    pthread_create(&t2, NULL, thread_func2, NULL);\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n\n    return 0;\n}\n"
+}

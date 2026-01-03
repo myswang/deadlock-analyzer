@@ -1,0 +1,105 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "main_B1",
+                "target": "helper1_B1",
+                "type": "call"
+            },
+            {
+                "source": "main_B1",
+                "target": "helper2_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "pthread_mutex_lock(&lockA)",
+                    "pthread_mutex_lock(&lockB)",
+                    "pthread_mutex_unlock(&lockB)",
+                    "pthread_mutex_unlock(&lockA)"
+                ],
+                "function": "helper1",
+                "id": "helper1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&lockB)",
+                    "pthread_mutex_lock(&lockA)",
+                    "pthread_mutex_unlock(&lockA)",
+                    "pthread_mutex_unlock(&lockB)"
+                ],
+                "function": "helper2",
+                "id": "helper2_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "helper1()",
+                    "helper2()",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "main",
+            "function": "helper1",
+            "line": 10,
+            "order": 1,
+            "source": "lockA",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "helper1",
+            "line": 11,
+            "order": 2,
+            "source": "lockB",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "helper2",
+            "line": 17,
+            "order": 3,
+            "source": "lockB",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "helper2",
+            "line": 18,
+            "order": 4,
+            "source": "lockA",
+            "target": "main",
+            "type": "holds"
+        }
+    ],
+    "filename": "-single_thread_classic.c",
+    "nodes": [
+        {
+            "id": "lockA",
+            "type": "resource"
+        },
+        {
+            "id": "lockB",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t lockA;\npthread_mutex_t lockB;\n\nvoid helper1() {\n    pthread_mutex_lock(&lockA);\n    pthread_mutex_lock(&lockB);\n    pthread_mutex_unlock(&lockB);\n    pthread_mutex_unlock(&lockA);\n}\n\nvoid helper2() {\n    pthread_mutex_lock(&lockB);\n    pthread_mutex_lock(&lockA);\n    pthread_mutex_unlock(&lockA);\n    pthread_mutex_unlock(&lockB);\n}\n\nint main() {\n    helper1();\n    helper2();\n\n    return 0;\n}\n"
+}

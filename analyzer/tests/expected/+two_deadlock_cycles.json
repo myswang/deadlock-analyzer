@@ -1,0 +1,193 @@
+{
+    "CFG": {
+        "nodes": [
+            {
+                "code": [
+                    "pthread_t t1;\n",
+                    "pthread_t t2;\n",
+                    "pthread_t t3;\n",
+                    "pthread_t t4;\n",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&A)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&B)",
+                    "pthread_mutex_unlock(&B)",
+                    "pthread_mutex_unlock(&A)"
+                ],
+                "function": "thread1",
+                "id": "thread1_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&B)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&A)",
+                    "pthread_mutex_unlock(&A)",
+                    "pthread_mutex_unlock(&B)"
+                ],
+                "function": "thread2",
+                "id": "thread2_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&C)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&D)",
+                    "pthread_mutex_unlock(&D)",
+                    "pthread_mutex_unlock(&C)"
+                ],
+                "function": "thread3",
+                "id": "thread3_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "pthread_mutex_lock(&D)",
+                    "sleep(1)",
+                    "pthread_mutex_lock(&C)",
+                    "pthread_mutex_unlock(&C)",
+                    "pthread_mutex_unlock(&D)"
+                ],
+                "function": "thread4",
+                "id": "thread4_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "cycles": [
+        "A -> B -> A",
+        "C -> D -> C"
+    ],
+    "deadlocks": true,
+    "edges": [
+        {
+            "cycle": 1,
+            "entryPt": "thread1",
+            "function": "thread1",
+            "line": 9,
+            "order": 1,
+            "source": "A",
+            "target": "t1",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread1",
+            "function": "thread1",
+            "line": 11,
+            "order": 2,
+            "source": "t1",
+            "target": "B",
+            "type": "waiting"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread2",
+            "function": "thread2",
+            "line": 18,
+            "order": 1,
+            "source": "B",
+            "target": "t2",
+            "type": "holds"
+        },
+        {
+            "cycle": 1,
+            "entryPt": "thread2",
+            "function": "thread2",
+            "line": 20,
+            "order": 2,
+            "source": "t2",
+            "target": "A",
+            "type": "waiting"
+        },
+        {
+            "cycle": 2,
+            "entryPt": "thread3",
+            "function": "thread3",
+            "line": 27,
+            "order": 1,
+            "source": "C",
+            "target": "t3",
+            "type": "holds"
+        },
+        {
+            "cycle": 2,
+            "entryPt": "thread3",
+            "function": "thread3",
+            "line": 29,
+            "order": 2,
+            "source": "t3",
+            "target": "D",
+            "type": "waiting"
+        },
+        {
+            "cycle": 2,
+            "entryPt": "thread4",
+            "function": "thread4",
+            "line": 36,
+            "order": 1,
+            "source": "D",
+            "target": "t4",
+            "type": "holds"
+        },
+        {
+            "cycle": 2,
+            "entryPt": "thread4",
+            "function": "thread4",
+            "line": 38,
+            "order": 2,
+            "source": "t4",
+            "target": "C",
+            "type": "waiting"
+        }
+    ],
+    "filename": "+two_deadlock_cycles.c",
+    "nodes": [
+        {
+            "id": "A",
+            "type": "resource"
+        },
+        {
+            "id": "B",
+            "type": "resource"
+        },
+        {
+            "id": "C",
+            "type": "resource"
+        },
+        {
+            "id": "D",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        },
+        {
+            "id": "t1",
+            "type": "process"
+        },
+        {
+            "id": "t2",
+            "type": "process"
+        },
+        {
+            "id": "t3",
+            "type": "process"
+        },
+        {
+            "id": "t4",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t A, B, C, D;\n\nvoid *thread1(void *arg) {\n    pthread_mutex_lock(&A);\n    sleep(1);\n    pthread_mutex_lock(&B);\n    pthread_mutex_unlock(&B);\n    pthread_mutex_unlock(&A);\n    return NULL;\n}\n\nvoid *thread2(void *arg) {\n    pthread_mutex_lock(&B);\n    sleep(1);\n    pthread_mutex_lock(&A);\n    pthread_mutex_unlock(&A);\n    pthread_mutex_unlock(&B);\n    return NULL;\n}\n\nvoid *thread3(void *arg) {\n    pthread_mutex_lock(&C);\n    sleep(1);\n    pthread_mutex_lock(&D);\n    pthread_mutex_unlock(&D);\n    pthread_mutex_unlock(&C);\n    return NULL;\n}\n\nvoid *thread4(void *arg) {\n    pthread_mutex_lock(&D);\n    sleep(1);\n    pthread_mutex_lock(&C);\n    pthread_mutex_unlock(&C);\n    pthread_mutex_unlock(&D);\n    return NULL;\n}\n\nint main() {\n    pthread_mutex_init(&A, NULL);\n    pthread_mutex_init(&B, NULL);\n    pthread_mutex_init(&C, NULL);\n    pthread_mutex_init(&D, NULL);\n\n    pthread_t t1, t2, t3, t4;\n    pthread_create(&t1, NULL, thread1, NULL);\n    pthread_create(&t2, NULL, thread2, NULL);\n    pthread_create(&t3, NULL, thread3, NULL);\n    pthread_create(&t4, NULL, thread4, NULL);\n\n    pthread_join(t1, NULL);\n    pthread_join(t2, NULL);\n    pthread_join(t3, NULL);\n    pthread_join(t4, NULL);\n\n    return 0;\n}"
+}

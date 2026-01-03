@@ -1,0 +1,92 @@
+{
+    "CFG": {
+        "edges": [
+            {
+                "source": "main_B1",
+                "target": "func_B1",
+                "type": "call"
+            }
+        ],
+        "nodes": [
+            {
+                "code": [
+                    "pthread_mutex_lock(&m1)",
+                    "pthread_mutex_lock(&m2)",
+                    "pthread_mutex_unlock(&m2)",
+                    "pthread_mutex_unlock(&m1)",
+                    "pthread_mutex_lock(&m1)",
+                    "pthread_mutex_lock(&m2)",
+                    "pthread_mutex_unlock(&m2)",
+                    "pthread_mutex_unlock(&m1)"
+                ],
+                "function": "func",
+                "id": "func_B1",
+                "type": "normal"
+            },
+            {
+                "code": [
+                    "func()",
+                    "return 0;\n"
+                ],
+                "function": "main",
+                "id": "main_B1",
+                "type": "normal"
+            }
+        ]
+    },
+    "deadlocks": false,
+    "edges": [
+        {
+            "entryPt": "main",
+            "function": "func",
+            "line": 9,
+            "order": 1,
+            "source": "m1",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "func",
+            "line": 10,
+            "order": 2,
+            "source": "m2",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "func",
+            "line": 14,
+            "order": 3,
+            "source": "m1",
+            "target": "main",
+            "type": "holds"
+        },
+        {
+            "entryPt": "main",
+            "function": "func",
+            "line": 15,
+            "order": 4,
+            "source": "m2",
+            "target": "main",
+            "type": "holds"
+        }
+    ],
+    "filename": "-single_thread_sequential_simultaneous.c",
+    "nodes": [
+        {
+            "id": "m1",
+            "type": "resource"
+        },
+        {
+            "id": "m2",
+            "type": "resource"
+        },
+        {
+            "id": "main",
+            "type": "process"
+        }
+    ],
+    "source": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\npthread_mutex_t m1, m2;\n\nvoid func() {\n    pthread_mutex_lock(&m1);\n    pthread_mutex_lock(&m2);\n    pthread_mutex_unlock(&m2);\n    pthread_mutex_unlock(&m1);\n\n    pthread_mutex_lock(&m1);\n    pthread_mutex_lock(&m2);\n    pthread_mutex_unlock(&m2);\n    pthread_mutex_unlock(&m1);\n}\n\nint main() {\n    func();\n\n    return 0;\n}\n"
+}
