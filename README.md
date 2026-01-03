@@ -1,7 +1,6 @@
-# Group4Project2
+# Deadlock Analyzer Tool
 
-## Video Link
-[Group 4](https://www.youtube.com/watch?v=25NMCawHJxI)
+Static analysis and visualization tool for deadlocks in C programs 
 
 ## Setup Instructions
 
